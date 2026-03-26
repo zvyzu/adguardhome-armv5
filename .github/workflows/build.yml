@@ -55,7 +55,7 @@ jobs:
       - name: Get AdGuardHome version from built image
         id: get_version_from_image
         run: |
-          RAW_VERSION=$(docker run --rm agh:local ./AdGuardHome --version || true)
+          RAW_VERSION=$(docker run --rm --platform linux/arm/v5 --entrypoint /opt/adguardhome/AdGuardHome agh:local --version || true)
 
           echo "Raw version output: $RAW_VERSION"
 
