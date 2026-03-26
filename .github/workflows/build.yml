@@ -1,0 +1,101 @@
+name: Docker Image CI
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Dockerfile'
+  release:
+    types: [published]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set lowercase repository name
+        id: lower_repo_name
+        env:
+          FULL_REPO_NAME: ${{ github.repository }}
+        run: |
+          echo "REPO_LOWER=$(echo "$FULL_REPO_NAME" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image (linux/arm/v5, local only)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/arm/v5
+          push: false
+          load: true
+          tags: agh:local
+
+      - name: Get AdGuardHome version from built image
+        id: get_version_from_image
+        run: |
+          RAW_VERSION=$(docker run --rm agh:local ./AdGuardHome --version || true)
+
+          echo "Raw version output: $RAW_VERSION"
+
+          BASE_VERSION=$(echo "$RAW_VERSION" | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' | head -n1)
+
+          if [ -z "$BASE_VERSION" ]; then
+            echo "$RAW_VERSION"
+            exit 1
+          fi
+
+          FINAL_VERSION="v$BASE_VERSION"
+
+          echo "Detected AdGuardHome version: $FINAL_VERSION"
+          echo "AGH_VERSION=$FINAL_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if image with this version already exists in GHCR
+        id: check_image
+        run: |
+          docker manifest inspect \
+            ghcr.io/${{ steps.lower_repo_name.outputs.REPO_LOWER }}:${{ steps.get_version_from_image.outputs.AGH_VERSION }}
+        continue-on-error: true
+
+      - name: Tag and push image to GHCR
+        if: steps.check_image.outcome == 'failure'
+        run: |
+          IMAGE_LOCAL="agh:local"
+          REPO="ghcr.io/${{ steps.lower_repo_name.outputs.REPO_LOWER }}"
+          VERSION="${{ steps.get_version_from_image.outputs.AGH_VERSION }}"
+
+          echo "Tagging $IMAGE_LOCAL as:"
+          echo "  $REPO:latest"
+          echo "  $REPO:$VERSION"
+
+          docker tag "$IMAGE_LOCAL" "$REPO:latest"
+          docker tag "$IMAGE_LOCAL" "$REPO:$VERSION"
+
+          docker push "$REPO:latest"
+          docker push "$REPO:$VERSION"
+
+      - name: Skip push (version already exists)
+        if: steps.check_image.outcome == 'success'
+        run: |
+          echo "Image with tag ${{ steps.get_version_from_image.outputs.AGH_VERSION }} already exists in GHCR. Skipping push."
