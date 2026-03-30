@@ -43,6 +43,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build image (linux/arm/v5, local only)
         uses: docker/build-push-action@v6
         with:
@@ -78,22 +84,32 @@ jobs:
             ghcr.io/${{ steps.lower_repo_name.outputs.REPO_LOWER }}:${{ steps.get_version_from_image.outputs.AGH_VERSION }}
         continue-on-error: true
 
-      - name: Tag and push image to GHCR
+      - name: Tag and push image to GHCR and Docker Hub
         if: steps.check_image.outcome == 'failure'
         run: |
           IMAGE_LOCAL="agh:local"
-          REPO="ghcr.io/${{ steps.lower_repo_name.outputs.REPO_LOWER }}"
+          GHCR_REPO="ghcr.io/${{ steps.lower_repo_name.outputs.REPO_LOWER }}"
+          DOCKERHUB_REPO="${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}"
           VERSION="${{ steps.get_version_from_image.outputs.AGH_VERSION }}"
 
           echo "Tagging $IMAGE_LOCAL as:"
-          echo "  $REPO:latest"
-          echo "  $REPO:$VERSION"
+          echo "  $GHCR_REPO:latest"
+          echo "  $GHCR_REPO:$VERSION"
+          echo "  $DOCKERHUB_REPO:latest"
+          echo "  $DOCKERHUB_REPO:$VERSION"
 
-          docker tag "$IMAGE_LOCAL" "$REPO:latest"
-          docker tag "$IMAGE_LOCAL" "$REPO:$VERSION"
+          docker tag "$IMAGE_LOCAL" "$GHCR_REPO:latest"
+          docker tag "$IMAGE_LOCAL" "$GHCR_REPO:$VERSION"
+          docker tag "$IMAGE_LOCAL" "$DOCKERHUB_REPO:latest"
+          docker tag "$IMAGE_LOCAL" "$DOCKERHUB_REPO:$VERSION"
 
-          docker push "$REPO:latest"
-          docker push "$REPO:$VERSION"
+          echo "Pushing to GHCR..."
+          docker push "$GHCR_REPO:latest"
+          docker push "$GHCR_REPO:$VERSION"
+
+          echo "Pushing to Docker Hub..."
+          docker push "$DOCKERHUB_REPO:latest"
+          docker push "$DOCKERHUB_REPO:$VERSION"
 
       - name: Skip push (version already exists)
         if: steps.check_image.outcome == 'success'
