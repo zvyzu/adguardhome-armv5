@@ -24,9 +24,6 @@ RUN set -eux; \
     curl -fSL "https://github.com/AdguardTeam/AdGuardHome/releases/download/v${AGH_VERSION}/AdGuardHome_linux_armv5.tar.gz" -o agh.tar.gz; \
     tar -xzf agh.tar.gz;
 
-# Allow binding to privileged ports without root
-RUN setcap 'cap_net_bind_service=+eip cap_net_raw=+eip' /tmp/build/AdGuardHome/AdGuardHome
-
 # Prepare runtime directory structure
 RUN mkdir -p /opt/adguardhome/work /opt/adguardhome/conf
 
@@ -36,19 +33,21 @@ FROM busybox:stable-glibc
 # Metadata
 LABEL maintainer="vyzu"
 
-# Copy CA certificates
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+# NON-ROOT USER & GROUP (UID: 10000)
+RUN addgroup -g 10000 adguard && \
+    adduser -D -H -u 10000 -G adguard adguard
 
-# Copy timezone data
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
-# Copy libcap shared libraries
-COPY --from=builder /usr/lib/arm-linux-gnueabi/libcap.so* /usr/lib/arm-linux-gnueabi/
+COPY --from=builder /usr/lib/arm-linux-gnueabi/libcap.so* /usr/lib/
+COPY --from=builder /sbin/setcap /sbin/setcap
 
-# Copy binary and working directories from builder
-COPY --from=builder /tmp/build/AdGuardHome/AdGuardHome /opt/adguardhome/AdGuardHome
-COPY --from=builder /opt/adguardhome/work /opt/adguardhome/work/
-COPY --from=builder /opt/adguardhome/conf /opt/adguardhome/conf/
+COPY --from=builder --chown=10000:10000 /tmp/build/AdGuardHome/AdGuardHome /opt/adguardhome/AdGuardHome
+COPY --from=builder --chown=10000:10000 /opt/adguardhome/work /opt/adguardhome/work/
+COPY --from=builder --chown=10000:10000 /opt/adguardhome/conf /opt/adguardhome/conf/
+
+RUN /sbin/setcap 'cap_net_bind_service=+eip cap_net_raw=+eip' /opt/adguardhome/AdGuardHome
 
 ENV TZ=UTC
 
@@ -59,10 +58,12 @@ EXPOSE 53/tcp 53/udp 67/udp 68/udp 80/tcp 443/tcp 853/tcp 853/udp 784/udp 8853/u
 # Start AdGuardHome
 WORKDIR /opt/adguardhome/work
 
+USER 10000:10000
+
 ENTRYPOINT ["/opt/adguardhome/AdGuardHome"]
 
 CMD [ \
-	"--no-check-update", \
-	"--config", "/opt/adguardhome/conf/AdGuardHome.yaml", \
-	"--work-dir", "/opt/adguardhome/work" \
+    "--no-check-update", \
+    "--config", "/opt/adguardhome/conf/AdGuardHome.yaml", \
+    "--work-dir", "/opt/adguardhome/work" \
 ]
