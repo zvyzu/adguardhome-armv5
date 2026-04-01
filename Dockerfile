@@ -31,7 +31,7 @@ RUN setcap 'cap_net_bind_service=+eip cap_net_raw=+eip' /tmp/build/AdGuardHome/A
 RUN mkdir -p /opt/adguardhome/work /opt/adguardhome/conf
 
 # STAGE 2: Final Runtime
-FROM scratch
+FROM busybox:stable-glibc
 
 # Metadata
 LABEL maintainer="vyzu"
