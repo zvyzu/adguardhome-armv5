@@ -57,6 +57,12 @@ ENV TZ=UTC
 EXPOSE 53/tcp 53/udp 67/udp 68/udp 80/tcp 443/tcp 853/tcp 853/udp 784/udp 8853/udp 5443/tcp 5443/udp 3000/tcp
 
 # Start AdGuardHome
-ENTRYPOINT ["/opt/adguardhome/AdGuardHome", \
-     "--work-dir", "/opt/adguardhome/work", \
-     "--config", "/opt/adguardhome/conf/AdGuardHome.yaml"]
+WORKDIR /opt/adguardhome/work
+
+ENTRYPOINT ["/opt/adguardhome/AdGuardHome"]
+
+CMD [ \
+	"--no-check-update", \
+	"--config", "/opt/adguardhome/conf/AdGuardHome.yaml", \
+	"--work-dir", "/opt/adguardhome/work" \
+]
