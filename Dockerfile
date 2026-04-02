@@ -1,6 +1,6 @@
 # STAGE 1: Builder
 # Downloads and extracts the AdGuardHome binary for ARMv5
-FROM arm32v5/debian:bookworm-slim AS builder
+FROM debian:stable AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 WORKDIR /tmp/build
