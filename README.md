@@ -37,6 +37,8 @@ zvyzu/adguardhome-armv5:latest
 
 or
 
+Set your MikroTik container registry to:
+
 ```
 https://registry-1.docker.io
 ```
