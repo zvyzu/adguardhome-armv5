@@ -108,8 +108,8 @@ jobs:
           docker push "$GHCR_REPO:$VERSION"
 
           echo "Pushing to Docker Hub..."
-          docker push "$DOCKERHUB_REPO:latest"
           docker push "$DOCKERHUB_REPO:$VERSION"
+          docker push "$DOCKERHUB_REPO:latest"
 
       - name: Skip push (version already exists)
         if: steps.check_image.outcome == 'success'
