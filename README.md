@@ -35,7 +35,7 @@ Then pull the image from:
 zvyzu/adguardhome-armv5:latest
 ```
 
-or
+or using Docker.io:
 
 Set your MikroTik container registry to:
 
