@@ -39,9 +39,9 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /usr/lib/arm-linux-gnueabi/libcap.so* /usr/lib/
 COPY --from=builder /sbin/setcap /sbin/setcap
 
-COPY --from=builder --chown=10000:10000 /tmp/build/AdGuardHome/AdGuardHome /opt/adguardhome/AdGuardHome
-COPY --from=builder --chown=10000:10000 /opt/adguardhome/work /opt/adguardhome/work/
-COPY --from=builder --chown=10000:10000 /opt/adguardhome/conf /opt/adguardhome/conf/
+COPY --from=builder /tmp/build/AdGuardHome/AdGuardHome /opt/adguardhome/AdGuardHome
+COPY --from=builder /opt/adguardhome/work /opt/adguardhome/work/
+COPY --from=builder /opt/adguardhome/conf /opt/adguardhome/conf/
 
 RUN /sbin/setcap 'cap_net_bind_service=+eip cap_net_raw=+eip' /opt/adguardhome/AdGuardHome
 
