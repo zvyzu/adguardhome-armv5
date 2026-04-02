@@ -19,6 +19,12 @@ This repository solves that limitation by providing a working, lightweight conta
 
 ---
 
+## Docker Hub:
+
+[https://github.com/zvyzu/adguardhome-armv5](https://hub.docker.com/r/vyzu/adguardhome-armv5)
+
+---
+
 ## 📦 Container Image
 
 The prebuilt image is available on **GitHub Container Registry (GHCR)** and **Docker Hub**:
@@ -35,9 +41,7 @@ Then pull the image from:
 zvyzu/adguardhome-armv5:latest
 ```
 
-or using Docker.io:
-
-Set your MikroTik container registry to:
+or set your MikroTik container registry to:
 
 ```
 https://registry-1.docker.io
