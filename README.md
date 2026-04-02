@@ -15,13 +15,13 @@ This repository solves that limitation by providing a working, lightweight conta
 
 - ARMv5 compatible container image
 - Based on official AdGuardHome release binaries
-- Published on GitHub Container Registry (GHCR)
+- Minimal and lightweight runtime image (Include only necessary runtime dependencies and the AdGuardHome binary)
 
 ---
 
 ## 📦 Container Image
 
-The prebuilt image is available on **GitHub Container Registry (GHCR)**:
+The prebuilt image is available on **GitHub Container Registry (GHCR)** and **Docker Hub**:
 
 Set your MikroTik container registry to:
 
@@ -33,6 +33,18 @@ Then pull the image from:
 
 ```
 zvyzu/adguardhome-armv5:latest
+```
+
+or
+
+```
+https://registry-1.docker.io
+```
+
+Then pull the image from:
+
+```
+vyzu/adguardhome-armv5:latest
 ```
 
 ---
