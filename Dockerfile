@@ -30,8 +30,7 @@ RUN mkdir -p /opt/adguardhome/work /opt/adguardhome/conf
 # STAGE 2: Final Runtime
 FROM busybox:stable-glibc
 
-# Metadata
-LABEL maintainer="vyzu"
+ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
@@ -39,11 +38,10 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /usr/lib/arm-linux-gnueabi/libcap.so* /usr/lib/
 COPY --from=builder /sbin/setcap /sbin/setcap
 
-COPY --from=builder /tmp/build/AdGuardHome/AdGuardHome /opt/adguardhome/AdGuardHome
-COPY --from=builder /opt/adguardhome/work /opt/adguardhome/work/
-COPY --from=builder /opt/adguardhome/conf /opt/adguardhome/conf/
-
-RUN /sbin/setcap 'cap_net_bind_service=+eip cap_net_raw=+eip' /opt/adguardhome/AdGuardHome
+RUN --mount=type=bind,from=builder,source=/tmp/build/AdGuardHome/AdGuardHome,target=/tmp/AdGuardHome \
+    cp /tmp/AdGuardHome /opt/adguardhome/AdGuardHome && \
+    mkdir -p /opt/adguardhome/conf /opt/adguardhome/work && \
+    setcap 'cap_net_bind_service=+eip' /opt/adguardhome/AdGuardHome
 
 ENV TZ=UTC
 
