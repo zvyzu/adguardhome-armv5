@@ -24,9 +24,6 @@ RUN set -eux; \
     curl -fSL "https://github.com/AdguardTeam/AdGuardHome/releases/download/v${AGH_VERSION}/AdGuardHome_linux_armv5.tar.gz" -o agh.tar.gz; \
     tar -xzf agh.tar.gz;
 
-# Prepare runtime directory structure
-RUN mkdir -p /opt/adguardhome/work /opt/adguardhome/conf
-
 # STAGE 2: Final Runtime
 FROM busybox:stable-glibc
 
@@ -42,7 +39,9 @@ COPY --from=builder /sbin/setcap /sbin/setcap
 RUN --mount=type=bind,from=builder,source=/tmp/build/AdGuardHome/AdGuardHome,target=/tmp/AdGuardHome \
     mkdir -p /opt/adguardhome/conf /opt/adguardhome/work && \
     cp /tmp/AdGuardHome /opt/adguardhome/AdGuardHome && \
-    chown -R 65534:65534 /opt/adguardhome && \
+    addgroup -g 10001 adguardhome && \
+    adduser -D -H -u 10001 -G adguardhome adguardhome && \
+    chown -R 10001:10001 /opt/adguardhome && \
     chmod 0755 /opt/adguardhome/AdGuardHome && \
     setcap 'cap_net_bind_service=+eip' /opt/adguardhome/AdGuardHome
 
