@@ -33,6 +33,7 @@ FROM busybox:stable-glibc
 ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 COPY --from=builder /usr/lib/arm-linux-gnueabi/libcap.so* /usr/lib/
@@ -41,6 +42,8 @@ COPY --from=builder /sbin/setcap /sbin/setcap
 RUN --mount=type=bind,from=builder,source=/tmp/build/AdGuardHome/AdGuardHome,target=/tmp/AdGuardHome \
     mkdir -p /opt/adguardhome/conf /opt/adguardhome/work && \
     cp /tmp/AdGuardHome /opt/adguardhome/AdGuardHome && \
+    chown -R 65534:65534 /opt/adguardhome && \
+    chmod 0755 /opt/adguardhome/AdGuardHome && \
     setcap 'cap_net_bind_service=+eip' /opt/adguardhome/AdGuardHome
 
 ENV TZ=UTC
