@@ -39,8 +39,8 @@ COPY --from=builder /usr/lib/arm-linux-gnueabi/libcap.so* /usr/lib/
 COPY --from=builder /sbin/setcap /sbin/setcap
 
 RUN --mount=type=bind,from=builder,source=/tmp/build/AdGuardHome/AdGuardHome,target=/tmp/AdGuardHome \
-    cp /tmp/AdGuardHome /opt/adguardhome/AdGuardHome && \
     mkdir -p /opt/adguardhome/conf /opt/adguardhome/work && \
+    cp /tmp/AdGuardHome /opt/adguardhome/AdGuardHome && \
     setcap 'cap_net_bind_service=+eip' /opt/adguardhome/AdGuardHome
 
 ENV TZ=UTC
